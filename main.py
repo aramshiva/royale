@@ -1,17 +1,24 @@
 """
 TO-DO:
- 
+
 P1
+If a room has a monster AND a treasure, you get the option to grab the treasure and the monster doesn't attack.  If you go away and return to the room, the monster is no longer there. (you get the "already looted" message)
+Be able to equip armor and heal outside of a fight.
+replace do you want to look at inventory with an inv command
+
+P2
 Boss Fights
 Illnesses + Apothecarys
 Bet (roll a dice during a boss which has 3 HORRIBLE options and 3 GREAT options and one of the terrible options will kill you next damage)
-Feel free to add set-piece encounters or special rooms that contain things like a merchant or fetch-quest giver.  If you are big-hearted, you might even want to give players some way to get out of the dungeon!
 Data Saving + Save Slots
 
-P2
+P3
 Clean Up Text
 Move Data into Class Object
  
+FEATURES:
+- Uses Prims Algorthim for generating map (https://en.wikipedia.org/wiki/Prim%27s_algorithm)
+- Fully Customizable (all editable through data table)
 """
 import random, time, copy
  
@@ -43,20 +50,20 @@ def Action(t, monster):
         if monster["hp"] > 0:
             game.monsterattack(monster)
             
-    if t == "r":
-        if random.random() < 0.5:
-            print("You ran away!")
-            return
-        else:
-            print("You tried to run away but you tripped!")
-            game.monsterattack(monster)
+    # if t == "r":
+    #     if random.random() < 0.5:
+    #         print("You ran away!")
+    #         return
+    #     else:
+    #         print("You tried to run away but you tripped!")
+    #         game.monsterattack(monster)
             
     if t == "b":
         if random.random() > 0.7:
-            print("You befriended the mob and it walks away!")
+            print("You have befriended {}! It walks away.".format(monster["name"]))
             monster["hp"] = 0
         else:
-            print("It can't understand you and thinks you sweared at him")
+            print("You try to talk to {} but it dosent understand you. It attacks you!".format(monster["name"]))
             game.monsterattack(monster)
             
     if t == "w":
@@ -65,15 +72,17 @@ def Action(t, monster):
         if armors:
             print("Choose an armor piece to wear:")
             
-            for i, armor in enumerate(armors):
-                print("({}) {} - {} av".format(i, armor["name"], armor["av"]))
-            
-            choice = input()
-            
-            try: choice = int(choice)
-            except: raise Exception("Invalid Option")
-            try: choice = armors[choice]
-            except: raise Exception("Invalid Option")
+            while True:
+                for i, armor in enumerate(armors):
+                    print("({}) {} - {} av".format(i, armor["name"], armor["av"]))
+                
+                choice = input()
+                
+                try: 
+                    choice = armors[int(choice)]
+                    break
+                
+                except: print("Invalid Option, try again.")
             
             if data["player"]["armor"]:
                 data["player"]["inventory"].append(data["player"]["armor"])
@@ -92,16 +101,17 @@ def Action(t, monster):
         foods = [item for item in data["player"]["inventory"] if item["type"] == "consumable"]
         
         if foods:
-            print("Choose an item to eat:")
-            for i, food in enumerate(foods):
-                print("({}) {} - {} health".format(i + 1, food["name"], food["hv"]))
-    
-            choice = input()
-            
-            try: choice = int(choice) + 1
-            except: raise Exception("Invalid Option")
-            try: choice = food[choice]
-            except: raise Exception("Invalid Option")
+            while True:
+                print("Choose an item to eat:")
+                for i, food in enumerate(foods):
+                    print("({}) {} - {} health".format(i + 1, food["name"], food["hv"]))
+        
+                choice = input()
+                
+                try: 
+                    choice = food[int(choice) + 1]
+                    break
+                except: print("Invalid Option, try again.")
             
             if data["player"]["maxhealth"] == data["player"]["health"]:
                 if data["player"]["health"] + choice["hv"] <= data["player"]["maxhealth"]: data["player"]["health"] += choice["hv"]
@@ -114,6 +124,10 @@ def Action(t, monster):
         
         else:
             print("You don't have any food!")
+    
+    if t == "s": 
+        game.shop(data["player"])
+        return
 
 data = {
     "player": {
@@ -156,14 +170,14 @@ data = {
     ],
     "options": [
         ["a", "attack"],
-        ["r", "run"],
+        # ["r", "run"],
         ["b", "befriend"],
         ["w", "wear"],
-        ["e", "eat"]
+        ["e", "eat"],
+        ["s", "shop"]
         ]
 }
 
-# Run repeated extra code to the data database
 for option in data["options"]: option.append(Action)
     
 class Game:
@@ -246,11 +260,18 @@ class Game:
             return cells
 
     def start(self):
-        print("Loading Adventure...")
-        room = self.Room(20, 20)
-        data["rooms"] = room.build_rooms()
         print("\n" * 300)
-        print("Welcome Adventurer!")
+        print("""
+ ____ ____ ____ ____ ____ ____
+||r |||o |||y |||a |||l |||e ||
+||__|||__|||__|||__|||__|||__||
+|/__\|/__\|/__\|/__\|/__\|/__\|
+A game by aram
+a text-based adventure game
+loading...
+              """)
+        room = self.Room(30, 30)
+        data["rooms"] = room.build_rooms()
         self.rooms = data["rooms"]
         self.enter(random.choice(self.rooms))
     
@@ -303,37 +324,41 @@ class Game:
         
     def monsterattack(self, monster):
         damage = monster["damage"]
-        if not data["player"]["armor"]:
-            data["player"]["health"] -= damage
+        if not self.player["armor"]:
+            self.player["health"] -= damage
             print("\t" + monster["attackphrase"])
-            print("It attacks you for {} damage. You have {} HP left.".format(damage, data["player"]["health"]))
+            print("It attacks you for {} damage. You have {} HP left.".format(damage, self.player["health"]))
         else:
-            if data["player"]["armor"]["av"] > damage:
-                data["player"]["armor"]["av"] -= damage
+            if self.player["armor"]["av"] > damage:
+                self.player["armor"]["av"] -= damage
                 print("\t" + monster["attackphrase"])
-                print("It attacks you for {} damage. Your armor saved you and now has {} AV left.".format(damage, data["player"]["armor"]["av"]))
+                print("It attacks you for {} damage. Your armor saved you and now has {} AV left.".format(damage, self.player["armor"]["av"]))
             else:
-                damage -= data["player"]["armor"]["av"]
-                data["player"]["armor"] = None
-                data["player"]["health"] -= damage
+                damage -= self.player["armor"]["av"]
+                self.player["armor"] = None
+                self.player["health"] -= damage
                 print("\t" + monster["attackphrase"])
-                print("It attacks you for {} damage. Your shield protected some of the damage but broke. You have {} HP left.".format(damage, data["player"]["health"]))
+                print("It attacks you for {} damage. Your shield protected some of the damage but broke. You have {} HP left.".format(damage, self.player["health"]))
     
     def choose(self, current):
         rooms = current["exits"]
-        print("DIRECTIONS")
-        for room in rooms:
-            print(room)
-        
-        choice = input("Choose an direction to go.").lower()
-        
-        if choice == "west": d = "east"
-        elif choice == "east": d = "west"
-        elif choice == "north": d = "south"
-        elif choice == "south": d = "north"
-        
-        try: c = rooms[choice]
-        except: raise Exception("Invalid Room")
+        while True:
+            print("DIRECTIONS")
+            for room in rooms:
+                print(room.capitalize())
+            
+            choice = input("Choose an direction to go.").lower()
+            
+            if choice == "west": d = "east"
+            elif choice == "east": d = "west"
+            elif choice == "north": d = "south"
+            elif choice == "south": d = "north"
+            
+            try: 
+                c = rooms[choice]
+                break
+            except: 
+                print("Invalid Direction! Try Again.")
         
         c["exits"][d] = self.current_room
         
@@ -354,59 +379,66 @@ class Game:
             self.current_room["looted"] = True
     
         next_room = self.choose(self.current_room)
-        if next_room["type"] == "merchant": self.shop(data["player"])
+        if next_room["type"] == "merchant": self.shop(self.player)
         else: self.enter(next_room)
         
     
     def shop(self, player):
         canceled = False
         def inventorysell(player):
-            for i, item in enumerate(player["inventory"]):
-                i += 1
-                print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
-            choice = input("Enter item number (or c to cancel)")
-            if choice != "c":
-                try: choice = data["player"]["inventory"][int(choice) - 1]
-                except: raise Exception("Invalid Choice! You must input a number")
-            else:
-                canceled = True
-            return choice
+            while True:
+                for i, item in enumerate(player["inventory"]):
+                    i += 1
+                    print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
+                choice = input("Enter item number (or c to cancel)")
+                if choice != "c":
+                    try: 
+                        choice = self.player["inventory"][int(choice) - 1]
+                        break
+                    except: 
+                        print("Invalid Choice! Try again")
+                else:
+                    canceled = True
+                return choice
         
-        print("You currently have {} tokens.".format(data["player"]["tokens"]))
+        print("You currently have {} tokens.".format(self.player["tokens"]))
         if input("Would you like to sell an item in your inventory?") == "y":
             if not player["inventory"]: print("You have nothing to sell!")
             else:
                 sold = inventorysell(player)
                 if not canceled:
-                    data["player"]["tokens"] += sold["value"]
+                    self.player["tokens"] += sold["value"]
                     print("Sold {} for {} tokens".format(sold["name"], sold["value"]))
                     player["inventory"].remove(sold)
         cart = []
         while True:
-            print("========")
-            print("THE SHOP")
-            print("========")
-            print("The shopkeeper welcomes you. He says that everything is for sale (except his dog)")
-            print("You currently have {} tokens".format(data["player"]["tokens"]))
-            for i, item in enumerate(data["shopkeeper"]):
-                if item not in cart:
-                    i += 1
-                    print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
-            c = input("Input a number (or c to cancel)")
-            if c != "c":
-                try: c = int(c)
-                except: raise Exception("Invalid Choice! You must input a number")
-                try: c = data["shopkeeper"][c - 1]
-                except: raise Exception("Invalid Choice")
-                if data["player"]["tokens"] >= c["value"]:
-                    data["player"]["tokens"] -= c["value"]
-                    data["player"]["inventory"].append(c)
-                    data["shopkeeper"].remove(c)
-                    print("\n" * 30)
-                    print("Bought {} for {} tokens".format(c["name"], c["value"]))
-                    print("You now have {} tokens".format(data["player"]["tokens"]))
-                    player = data["player"]
-            else: return
+            while True:
+                print("========")
+                print("THE SHOP")
+                print("========")
+                print("The shopkeeper welcomes you. He says that everything is for sale (except his dog)")
+                print("You currently have {} tokens".format(self.player["tokens"]))
+                for i, item in enumerate(data["shopkeeper"]):
+                    if item not in cart:
+                        i += 1
+                        print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
+                c = input("Input a number (or c to cancel)")
+                if c != "c":
+                    try: 
+                        c = data["shopkeeper"][int(c) - 1]
+                        break
+                    
+                    except: print("Invalid Choice! You must input a number")
+                else: 
+                    if self.player["tokens"] >= c["value"]:
+                        self.player["tokens"] -= c["value"]
+                        self.player["inventory"].append(c)
+                        data["shopkeeper"].remove(c)
+                        print("\n" * 30)
+                        print("Bought {} for {} tokens".format(c["name"], c["value"]))
+                        print("You now have {} tokens".format(self.player["tokens"]))
+                        player = self.player
+                    else: return
 
 game = Game(data)
 game.start()
