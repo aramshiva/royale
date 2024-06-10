@@ -9,8 +9,6 @@ replace do you want to look at inventory with an inv command
 P2
 Boss Fights
 Illnesses + Apothecarys
-Bet (roll a dice during a boss which has 3 HORRIBLE options and 3 GREAT options and one of the terrible options will kill you next damage)
-Data Saving + Save Slots
 
 P3
 Clean Up Text
@@ -22,55 +20,33 @@ FEATURES:
 """
 import random, time, copy
  
-def Weapon(name, damage, desc, value, uses=-1): 
-    return {"type": "weapon", "name": name, "damage": damage, "uses": uses, "desc": desc, "value":value}
-
-def Monster(name, weapons, desc, hp, damage, catchphrase, attackphrase): 
-    return {"type": "mob", "name": name, "weapons": weapons, "desc": desc, "hp": hp, "damage": damage, "catchphrase": catchphrase, "attackphrase": attackphrase}
-
-def Boss(name, desc, hp, damage, catchphrase):
-    return {"type":"boss", "name":name, "desc":desc, "hp":hp, "damage":damage, "catchphrase":catchphrase}
-
-def Loot(name, desc, value): 
-    return {"type": "loot", "name": name, "desc": desc, "value":value}
- 
+def Weapon(name, damage, desc, value, uses=-1):return {"type": "weapon", "name": name, "damage": damage, "uses": uses, "desc": desc, "value":value}
+def Monster(name, weapons, desc, hp, damage, catchphrase, attackphrase): return {"type": "mob", "name": name, "weapons": weapons, "desc": desc, "hp": hp, "damage": damage, "catchphrase": catchphrase, "attackphrase": attackphrase}
+def Loot(name, desc, value):return {"type": "loot", "name": name, "desc": desc, "value":value}
 def Sale(name, desc, value, damage=-1, objecttype=None, uses=-1):
     if objecttype == "weapon": return {"type": "weapon", "name": name, "damage": damage, "uses": uses, "desc": desc, "purchased":[True, time.time()], "value":value}
     else: return {"type":"loot", "name":name, "desc":desc, "value":value, "purchased":[True, time.time()]}
-
-def Armor(name, desc, av, value):
-    return {"type":"protection", "name":name, "desc":desc, "av":av, "value":value}
-
-def Consumable(name, desc, value, hv):
-    return {"type":"consumable", "name":name, "desc":desc, "value":value, "hv":hv}
+def Armor(name, desc, av, value):return {"type":"protection", "name":name, "desc":desc, "av":av, "value":value}
+def Consumable(name, desc, value, hv):return {"type":"consumable", "name":name, "desc":desc, "value":value, "hv":hv}
 
 def Action(t, monster):
     if t == "a":
         game.attack(monster)
-        if monster["hp"] > 0:
-            game.monsterattack(monster)
-            
-    # if t == "r":
-    #     if random.random() < 0.5:
-    #         print("You ran away!")
-    #         return
-    #     else:
-    #         print("You tried to run away but you tripped!")
-    #         game.monsterattack(monster)
+        if monster["hp"] > 0: game.monsterattack(monster)
             
     if t == "b":
         if random.random() > 0.7:
-            print("You have befriended {}! It walks away.".format(monster["name"]))
+            print("you have befriended {}! it walks away.".format(monster["name"]))
             monster["hp"] = 0
         else:
-            print("You try to talk to {} but it dosent understand you. It attacks you!".format(monster["name"]))
+            print("you try to talk to {} but it dosent understand you. it attacks you!".format(monster["name"]))
             game.monsterattack(monster)
             
     if t == "w":
         armors = [item for item in data["player"]["inventory"] if item["type"] == "protection"]
         
         if armors:
-            print("Choose an armor piece to wear:")
+            print("choose an armor piece to wear:")
             
             while True:
                 for i, armor in enumerate(armors):
@@ -82,7 +58,7 @@ def Action(t, monster):
                     choice = armors[int(choice)]
                     break
                 
-                except: print("Invalid Option, try again.")
+                except: print("invalid choice, try again.")
             
             if data["player"]["armor"]:
                 data["player"]["inventory"].append(data["player"]["armor"])
@@ -95,14 +71,14 @@ def Action(t, monster):
             data["player"]["inventory"].remove(choice)
             game.monsterattack(monster)
         else:
-            print("You have nothing to equip!")
+            print("you have nothing to equip!")
             
     if t == "e":
         foods = [item for item in data["player"]["inventory"] if item["type"] == "consumable"]
         
         if foods:
             while True:
-                print("Choose an item to eat:")
+                print("choose an item to eat:")
                 for i, food in enumerate(foods):
                     print("({}) {} - {} health".format(i + 1, food["name"], food["hv"]))
         
@@ -111,19 +87,19 @@ def Action(t, monster):
                 try: 
                     choice = food[int(choice) + 1]
                     break
-                except: print("Invalid Option, try again.")
+                except: print("invalid Option, try again.")
             
             if data["player"]["maxhealth"] == data["player"]["health"]:
                 if data["player"]["health"] + choice["hv"] <= data["player"]["maxhealth"]: data["player"]["health"] += choice["hv"]
                 else: data["player"]["health"] = data["player"]["maxhealth"]
-                print("Ate {} for {} health. You are now at {} health.".format(choice["name"], choice["hv"], data["player"]["health"]))
+                print("ate {} for {} health. you are now at {} health.".format(choice["name"], choice["hv"], data["player"]["health"]))
                 data["player"]["inventory"].remove(choice)
                     
             else:
-                print("You are at max health!")
+                print("you are at max health!")
         
         else:
-            print("You don't have any food!")
+            print("you don't have any food!")
     
     if t == "s": 
         game.shop(data["player"])
@@ -132,52 +108,45 @@ def Action(t, monster):
 data = {
     "player": {
         "tokens": 10,
-        "damage": 10,
-        "health": 100,
-        "maxhealth": 100,
-        "inventory": [
-            Weapon("Wooden Stick", 1, "The stick is transcribed with some sort of unfamiliar language.", 1)
-        ],
+        "damage": 2,
+        "health": 25,
+        "inventory": [],
         "armor":None
     },
     "rooms": [
-        {"name":"The Classroom", "desc":"Learn or else..."},
-        {"name":"The Stage", "desc":"Showtime!"},
-        {"name":"Library", "desc":"Silence in the library!"},
-        {"name":"Mysterious room", "desc":"..."}
+        {"name":"the dining room", "desc":"eat up! before the king turns you into stew"},
+        {"name":"the ballroom", "desc":"where the partys are"},
+        {"name":"the hall", "desc":"a huge area showing the kings immense wealth"},
+        {"name":"the palace courtyard", "desc":"a beautiful garden nearby"},
+        {"name":"the gates", "desc":"one of the many entrance to the palace"},
+        {"name":"the weaponroom", "desc":"where the king keeps their guards weapons"},
+        {"name":"the kitchen", "desc":"where the chefs cook up the kings food"},
+        {"name":"the wine cellar", "desc":"did you know the easiest way to poision the king is through the wine?"},
+        {"name":"the kings guestroom", "desc":"where the king puts his dukes when they visit him"}
     ],
     "shopkeeper": [
-        Sale("1 use blade", "Powerful but you only have a single hit, use wisely!", 5, 12, "weapon", 1),
-        Sale("Fedora", "Look Stylish!", 3)
+        Sale("a fedora", "pretty!", 10),
+        Sale("a fedora (but with a feather on top", "may no one know why the shopkeeper charges so much", 50)
     ],
     "monsters": [
-        Monster("The Director", [], "A sinister figure overseeing everything.", 20, 5, "The show is starting!", "You cannot escape!"),
-        Monster("The Toymaker", [], "A creepy toymaker with a malevolent grin.", 15, 4, "Welcome to my workshop!", "Let's play a game!"),
-        Monster("The Doctor", [], "A doctor with a questionable practice.", 18, 3, "Time for your check-up!", "This won't hurt a bit!"),
-        Monster("The Librarian", [], "A ghostly figure who guards forbidden knowledge.", 12, 3, "Silence in the library!", "Knowledge is power!"),
-        Monster("The Butcher", [], "A hulking figure wielding a bloody cleaver.", 25, 6, "Fresh meat!", "I'll carve you up!")
+        Monster("the gate guards", [], "only obeys the king", 5, 2, "you may not go through", "FOR THE KING!"),
+        Monster("the slave", [], "a chained up fellow", 3, 1, "sorry but i have to attack you", "for the king!"),
+        Monster("the tastetester", [], "makes sure the kings food is not posion", 2, 3, "welcome young one...", "i was going to try this but you can instead!"),
+        Monster("the queen", [], "the king's wife", 10, 3, "oh my husband will be soo mad!", "ATTACK!")
     ],
     "loot": [
-        Consumable("Apple Pie", "Yum!", 5, 10),
-        Loot("Creepy Doll", "A doll with eyes that seem to follow you.", 1),
-        Loot("Mystery Potion", "A potion with swirling contents.", 3),
-        Loot("Old Key", "An old key with intricate designs.", 4),
-        Loot("Ancient Tome", "A book filled with strange symbols.", 5),
-        Loot("Rusty Cleaver", "An old, rusty cleaver with dried blood.", 6),
-        Loot("Mechanical Heart", "A heart made of gears and metal.", 7),
-        Armor("Chainmail Armor", "Weak but useful!", 3, 3),
-        Armor("Templar's Armor", "Embroidered with gold!", 9, 15)
+        Consumable("apple pie", "tastes like apple", 3, 3),
+        Loot("templars coin", "the king has put a 2 pound bounty on this coin, just to find out more", 2)
     ],
     "options": [
         ["a", "attack"],
-        # ["r", "run"],
-        ["b", "befriend"],
         ["w", "wear"],
         ["e", "eat"],
         ["s", "shop"]
         ]
 }
 
+data["player"]["maxhealth"] = data["player"]["health"]
 for option in data["options"]: option.append(Action)
     
 class Game:
@@ -266,18 +235,17 @@ class Game:
 ||r |||o |||y |||a |||l |||e ||
 ||__|||__|||__|||__|||__|||__||
 |/__\|/__\|/__\|/__\|/__\|/__\|
-A game by aram
-a text-based adventure game
+a text-based adventure game by aram
 loading...
               """)
-        room = self.Room(30, 30)
+        room = self.Room(100, 100)
         data["rooms"] = room.build_rooms()
         self.rooms = data["rooms"]
         self.enter(random.choice(self.rooms))
     
     def enter(self, room):
         self.current_room = room
-        entermessages = ["You have entered {}","You stumble upon {}","You find your self in {}","You appear to be in {}","You have appeared in {}","You are in {}","You are now in {}"]
+        entermessages = ["you have entered {}","you stumble upon {}","you find yourself in {}","you appear to be in {}","you have appeared in {}","you are in {}","you are now in {}"]
         entermessage = random.choice(entermessages)
         print(entermessage.format(room["name"]))
 
@@ -285,16 +253,16 @@ loading...
             if random.random() < 0.5: # if not, 50% chance room is empty
                 if not room["looted"]:
                     room["monsters"] = [random.choice(self.data["monsters"])]
-                    print("There is something in this room...")
+                    print("there is something in this room...")
                     for monster in room["monsters"]:
                         print("{} - {}".format(monster["name"], monster["desc"]))
                         self.fight(monster)
             else:
-                print("This room is empty")
+                print("this room is empty")
 
         else:
             if not room["looted"]:
-                print("There is something in this room...")
+                print("there is something in this room...")
                 for monster in room["monsters"]:
                     print("{} - {}".format(monster["name"], monster["desc"]))
                     self.fight(monster)
@@ -307,7 +275,7 @@ loading...
     def fight(self, monster):
         print(monster["catchphrase"])
         while monster["hp"] > 0 and self.player["health"] > 0:
-            print("Choose an action:")
+            print("choose an action:")
             for option in data["options"]:
                 print("({}){}".format(option[0], option[1]))
                     
@@ -320,34 +288,34 @@ loading...
     def attack(self, monster):
         damage = self.player["damage"]
         monster["hp"] -= damage
-        print("You hit {} for {} damage. It has {} HP left.".format(monster["name"], damage, monster["hp"]))
+        print("you hit {} for {} damage. it has {} hp left.".format(monster["name"], damage, monster["hp"]))
         
     def monsterattack(self, monster):
         damage = monster["damage"]
         if not self.player["armor"]:
             self.player["health"] -= damage
             print("\t" + monster["attackphrase"])
-            print("It attacks you for {} damage. You have {} HP left.".format(damage, self.player["health"]))
+            print("it attacks you for {} damage. you have {} hp left.".format(damage, self.player["health"]))
         else:
             if self.player["armor"]["av"] > damage:
                 self.player["armor"]["av"] -= damage
                 print("\t" + monster["attackphrase"])
-                print("It attacks you for {} damage. Your armor saved you and now has {} AV left.".format(damage, self.player["armor"]["av"]))
+                print("it attacks you for {} damage. your armor saved you and now has {} av left.".format(damage, self.player["armor"]["av"]))
             else:
                 damage -= self.player["armor"]["av"]
                 self.player["armor"] = None
                 self.player["health"] -= damage
                 print("\t" + monster["attackphrase"])
-                print("It attacks you for {} damage. Your shield protected some of the damage but broke. You have {} HP left.".format(damage, self.player["health"]))
+                print("it attacks you for {} damage. yout shield protected some of the damage but broke. You have {} hp left.".format(damage, self.player["health"]))
     
     def choose(self, current):
         rooms = current["exits"]
         while True:
-            print("DIRECTIONS")
+            print("===\ndirections\n===")
             for room in rooms:
-                print(room.capitalize())
+                print(room)
             
-            choice = input("Choose an direction to go.").lower()
+            choice = input("choose an direction to go.").lower()
             
             if choice == "west": d = "east"
             elif choice == "east": d = "west"
@@ -358,7 +326,7 @@ loading...
                 c = rooms[choice]
                 break
             except: 
-                print("Invalid Direction! Try Again.")
+                print("invalid direction! try again.")
         
         c["exits"][d] = self.current_room
         
@@ -366,16 +334,15 @@ loading...
                       
     def search(self):
         if self.current_room["looted"]:
-            print("You already looted this room.")
+            print("you already looted this room.")
         else:
             loot = random.choice(self.data["loot"])
-            print("\nYou found {}!".format(loot["name"]))
-            if input("Would you like to read more about it? (y/n)") == "y":
+            print("\nyou found {}!".format(loot["name"]))
+            if input("would you like to read more about it? (y/n)") == "y":
                 print("\n", loot["name"])
                 print("\t", loot["desc"], "\n")
             self.player["inventory"].append(copy.deepcopy(loot))
-            if input("{} was added to your inventory.\n\tWould you like to see your inventory? (y/n)".format(loot["name"])) == "y":
-                self.viewinv(self.player["inventory"])
+            print("{} was added to your inventory".format(loot["name"]))
             self.current_room["looted"] = True
     
         next_room = self.choose(self.current_room)
@@ -390,53 +357,53 @@ loading...
                 for i, item in enumerate(player["inventory"]):
                     i += 1
                     print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
-                choice = input("Enter item number (or c to cancel)")
+                choice = input("enter item number (or c to cancel)")
                 if choice != "c":
                     try: 
                         choice = self.player["inventory"][int(choice) - 1]
                         break
                     except: 
-                        print("Invalid Choice! Try again")
+                        print("invalid choice! try again")
                 else:
                     canceled = True
                 return choice
         
-        print("You currently have {} tokens.".format(self.player["tokens"]))
-        if input("Would you like to sell an item in your inventory?") == "y":
-            if not player["inventory"]: print("You have nothing to sell!")
+        print("you currently have {} tokens.".format(self.player["tokens"]))
+        if input("would you like to sell an item in your inventory?") == "y":
+            if not player["inventory"]: print("you have nothing to sell!")
             else:
                 sold = inventorysell(player)
                 if not canceled:
-                    self.player["tokens"] += sold["value"]
-                    print("Sold {} for {} tokens".format(sold["name"], sold["value"]))
-                    player["inventory"].remove(sold)
+                  self.player["tokens"] += sold["value"]
+                  print("sold {} for {} tokens".format(sold["name"], sold["value"]))
+                  player["inventory"].remove(sold)
         cart = []
         while True:
             while True:
                 print("========")
                 print("THE SHOP")
                 print("========")
-                print("The shopkeeper welcomes you. He says that everything is for sale (except his dog)")
-                print("You currently have {} tokens".format(self.player["tokens"]))
+                print("the shopkeeper welcomes you. he says that everything is for sale (except his dog)")
+                print("you currently have {} tokens".format(self.player["tokens"]))
                 for i, item in enumerate(data["shopkeeper"]):
                     if item not in cart:
                         i += 1
                         print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
-                c = input("Input a number (or c to cancel)")
+                c = input("input a number (or c to cancel)")
                 if c != "c":
                     try: 
                         c = data["shopkeeper"][int(c) - 1]
                         break
                     
-                    except: print("Invalid Choice! You must input a number")
+                    except: print("invalid choice! you must input a number")
                 else: 
                     if self.player["tokens"] >= c["value"]:
                         self.player["tokens"] -= c["value"]
                         self.player["inventory"].append(c)
                         data["shopkeeper"].remove(c)
                         print("\n" * 30)
-                        print("Bought {} for {} tokens".format(c["name"], c["value"]))
-                        print("You now have {} tokens".format(self.player["tokens"]))
+                        print("bought {} for {} tokens".format(c["name"], c["value"]))
+                        print("you now have {} tokens".format(self.player["tokens"]))
                         player = self.player
                     else: return
 
