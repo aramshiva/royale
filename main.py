@@ -6,11 +6,9 @@ Be able to equip armor and heal outside of a fight.
 replace do you want to look at inventory with an inv command
 
 P2
-Boss Fights
 Illnesses + Apothecarys
 
 P3
-Clean Up Text
 Move Data into Class Object
  
 FEATURES:
@@ -18,7 +16,7 @@ FEATURES:
 - Fully Customizable (all editable through data table)
 """
 
-import random, time, copy
+import random, time, copy, sys
  
 def Weapon(name, damage, desc, value, uses=-1):return {"type": "weapon", "name": name, "damage": damage, "uses": uses, "desc": desc, "value":value}
 def Monster(name, weapons, desc, hp, damage, catchphrase, attackphrase): return {"type": "mob", "name": name, "weapons": weapons, "desc": desc, "hp": hp, "damage": damage, "catchphrase": catchphrase, "attackphrase": attackphrase}
@@ -28,6 +26,7 @@ def Sale(name, desc, value, damage=-1, objecttype=None, uses=-1):
     else: return {"type":"loot", "name":name, "desc":desc, "value":value, "purchased":[True, time.time()]}
 def Armor(name, desc, av, value):return {"type":"protection", "name":name, "desc":desc, "av":av, "value":value}
 def Consumable(name, desc, value, hv):return {"type":"consumable", "name":name, "desc":desc, "value":value, "hv":hv}
+def Boss(name, weapons, desc, hp, damage, catchphrase, attackphrase): return {"type": "boss", "name": name, "weapons": weapons, "desc": desc, "hp": hp, "damage": damage, "catchphrase": catchphrase, "attackphrase": attackphrase}
 
 def Action(t, monster):
     if t == "a":
@@ -66,7 +65,7 @@ def Action(t, monster):
                 data["player"]["armor"] = None
                 
             data["player"]["armor"] = choice
-            print("Equipped {}".format(data["player"]["armor"]["name"]))
+            print("Equipped {} ᕙ(⇀‸↼‶)ᕗ".format(data["player"]["armor"]["name"]))
             
             data["player"]["inventory"].remove(choice)
             game.monsterattack(monster)
@@ -123,6 +122,9 @@ data = {
         {"name":"the kitchen", "desc":"where the chefs cook up the kings food"},
         {"name":"the wine cellar", "desc":"did you know the easiest way to poision the king is through the wine?"},
         {"name":"the kings guestroom", "desc":"where the king puts his dukes when they visit him"}
+    ],
+    "bosses": [
+        Boss("The King", [], "The one.", 25, 3, "ALL HAIL ME", "YOU DARE CHALLENGE ME?")
     ],
     "shopkeeper": [
         Sale("a fedora", "pretty!", 10),
@@ -346,6 +348,29 @@ loading...
                         player = self.player
                     else: return
 
+    def boss(self, boss):
+        print("you have entered the boss room. prepare yourself for the final battle.")
+        print("୧༼ಠ益ಠ༽୨")
+        self.fight(boss)
+        if boss["hp"] <= 0:
+            print("you have defeated the boss! congratulations!")
+        else:
+            print("you have been defeated by the boss. game over.")
+            print("""
+ ____ ____ ____ ____ ____ ____ _________ ____ ____ ____
+||t |||h |||a |||n |||k |||s |||       |||f |||o |||r ||
+||__|||__|||__|||__|||__|||__|||_______|||__|||__|||__||
+|/__\|/__\|/__\|/__\|/__\|/__\|/_______\|/__\|/__\|/__\|
+ ____ ____ ____ ____ ____ ____ ____
+||p |||l |||a |||y |||i |||n |||g ||
+||__|||__|||__|||__|||__|||__|||__||
+|/__\|/__\|/__\|/__\|/__\|/__\|/__\|
+
+a game by aram 
+\( ﾟヮﾟ)/
+                  """)
+            sys.exit()
+            
     class Room: # Prims Algorthim
         
         def __init__(self, height, width):
