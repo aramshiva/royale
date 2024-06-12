@@ -42,63 +42,10 @@ def Action(t, monster):
             game.monsterattack(monster)
             
     if t == "w":
-        armors = [item for item in data["player"]["inventory"] if item["type"] == "protection"]
-        
-        if armors:
-            print("choose an armor piece to wear:")
-            
-            while True:
-                for i, armor in enumerate(armors):
-                    print("({}) {} - {} av".format(i, armor["name"], armor["av"]))
-                
-                choice = input()
-                
-                try: 
-                    choice = armors[int(choice)]
-                    break
-                
-                except: print("invalid choice, try again.")
-            
-            if data["player"]["armor"]:
-                data["player"]["inventory"].append(data["player"]["armor"])
-                print("Unequipped {}".format(data["player"]["armor"]["name"]))
-                data["player"]["armor"] = None
-                
-            data["player"]["armor"] = choice
-            print("Equipped {} ᕙ(⇀‸↼‶)ᕗ".format(data["player"]["armor"]["name"]))
-            
-            data["player"]["inventory"].remove(choice)
-            game.monsterattack(monster)
-        else:
-            print("you have nothing to equip!")
+        game.wear()
             
     if t == "e":
-        foods = [item for item in data["player"]["inventory"] if item["type"] == "consumable"]
-        
-        if foods:
-            while True:
-                print("choose an item to eat:")
-                for i, food in enumerate(foods):
-                    print("({}) {} - {} health".format(i + 1, food["name"], food["hv"]))
-        
-                choice = input()
-                
-                try: 
-                    choice = food[int(choice) + 1]
-                    break
-                except: print("invalid Option, try again.")
-            
-            if data["player"]["maxhealth"] == data["player"]["health"]:
-                if data["player"]["health"] + choice["hv"] <= data["player"]["maxhealth"]: data["player"]["health"] += choice["hv"]
-                else: data["player"]["health"] = data["player"]["maxhealth"]
-                print("ate {} for {} health. you are now at {} health.".format(choice["name"], choice["hv"], data["player"]["health"]))
-                data["player"]["inventory"].remove(choice)
-                    
-            else:
-                print("you are at max health!")
-        
-        else:
-            print("you don't have any food!")
+        game.eat()
     
     if t == "s": 
         game.shop(data["player"])
@@ -348,6 +295,65 @@ loading...
                         player = self.player
                     else: return
 
+    def eat(self):
+        foods = [item for item in data["player"]["inventory"] if item["type"] == "consumable"]
+        
+        if foods:
+            while True:
+                print("choose an item to eat:")
+                for i, food in enumerate(foods):
+                    print("({}) {} - {} health".format(i + 1, food["name"], food["hv"]))
+        
+                choice = input()
+                
+                try: 
+                    choice = food[int(choice) + 1]
+                    break
+                except: print("invalid Option, try again.")
+            
+            if data["player"]["maxhealth"] == data["player"]["health"]:
+                if data["player"]["health"] + choice["hv"] <= data["player"]["maxhealth"]: data["player"]["health"] += choice["hv"]
+                else: data["player"]["health"] = data["player"]["maxhealth"]
+                print("ate {} for {} health. you are now at {} health.".format(choice["name"], choice["hv"], data["player"]["health"]))
+                data["player"]["inventory"].remove(choice)
+                    
+            else:
+                print("you are at max health!")
+        
+        else:
+            print("you don't have any food!")
+    
+    def wear(self):
+        armors = [item for item in data["player"]["inventory"] if item["type"] == "protection"]
+        
+        if armors:
+            print("choose an armor piece to wear:")
+            
+            while True:
+                for i, armor in enumerate(armors):
+                    print("({}) {} - {} av".format(i, armor["name"], armor["av"]))
+                
+                choice = input()
+                
+                try: 
+                    choice = armors[int(choice)]
+                    break
+                
+                except: print("invalid choice, try again.")
+            
+            if data["player"]["armor"]:
+                data["player"]["inventory"].append(data["player"]["armor"])
+                print("Unequipped {}".format(data["player"]["armor"]["name"]))
+                data["player"]["armor"] = None
+                
+            data["player"]["armor"] = choice
+            print("Equipped {} ᕙ(⇀‸↼‶)ᕗ".format(data["player"]["armor"]["name"]))
+            
+            data["player"]["inventory"].remove(choice)
+            game.monsterattack(monster)
+        else:
+            print("you have nothing to equip!")
+            
     def boss(self, boss):
         print("you have entered the boss room. prepare yourself for the final battle.")
         print("୧༼ಠ益ಠ༽୨")
