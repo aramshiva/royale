@@ -1,19 +1,16 @@
 """
+ROYALE
+
 TO-DO:
-
-P1
-Be able to equip armor and heal outside of a fight.
-replace do you want to look at inventory with an inv command
-
-P2
-Illnesses + Apothecarys
-
-P3
-Move Data into Class Object
+- Rewrite code for turn based moves:
+    - Be able to equip armor and heal outside of a fight.
+    - replace do you want to look at inventory with an inv command
+- Move Data into Class Object
  
 FEATURES:
 - Uses Prims Algorthim for generating map (https://en.wikipedia.org/wiki/Prim%27s_algorithm)
 - Fully Customizable (all editable through data table)
+- Bosses! (code in place, not used cause im lazy)
 """
 
 import random, time, copy, sys
@@ -29,27 +26,15 @@ def Consumable(name, desc, value, hv):return {"type":"consumable", "name":name, 
 def Boss(name, weapons, desc, hp, damage, catchphrase, attackphrase): return {"type": "boss", "name": name, "weapons": weapons, "desc": desc, "hp": hp, "damage": damage, "catchphrase": catchphrase, "attackphrase": attackphrase}
 
 def Action(t, monster):
-    if t == "a":
-        game.attack(monster)
-        if monster["hp"] > 0: game.monsterattack(monster)
+    if t == "a": game.battle(monster)
             
-    if t == "b":
-        if random.random() > 0.7:
-            print("you have befriended {}! it walks away.".format(monster["name"]))
-            monster["hp"] = 0
-        else:
-            print("you try to talk to {} but it dosent understand you. it attacks you!".format(monster["name"]))
-            game.monsterattack(monster)
+    if t == "b": game.befriend(monster)
             
-    if t == "w":
-        game.wear()
+    if t == "w": game.wear()
             
-    if t == "e":
-        game.eat()
+    if t == "e": game.eat()
     
-    if t == "s": 
-        game.shop(data["player"])
-        return
+    if t == "s": game.shop(data["player"])
 
 data = {
     "player": {
@@ -353,7 +338,39 @@ loading...
             game.monsterattack(monster)
         else:
             print("you have nothing to equip!")
-            
+          
+    def reward(self):
+        print("""
+ ____ ____ ____ ____ ____ ____
+||g |||o |||l |||d |||e |||n ||
+||__|||__|||__|||__|||__|||__||
+|/__\|/__\|/__\|/__\|/__\|/__\|
+ ____ ____ ____ ____ ____ ____
+||t |||i |||c |||k |||e |||t ||
+||__|||__|||__|||__|||__|||__||
+|/__\|/__\|/__\|/__\|/__\|/__\|
+you got the golden ticket! ⸜(｡˃ ᵕ ˂ )⸝
+you have recieved:
+    - 20 tokens
+    - +1 permanent damage
+    - a new mystery item has been added to the shop!
+            """)
+        data["player"]["tokens"] += 20
+        data["player"]["damage"] += 1
+        data["shopkeeper"].append(Sale("Golden Ticket", "Cosmetic Physical Collectable", 10))
+    
+    def befriend(self, monster):
+        if random.random() > 0.7:
+            print("you have befriended {}! it walks away.".format(monster["name"]))
+            monster["hp"] = 0
+        else:
+            print("you try to talk to {} but it dosent understand you. it attacks you!".format(monster["name"]))
+            game.monsterattack(monster)
+    
+    def battle(self, monster):
+        game.attack(monster)
+        if monster["hp"] > 0: game.monsterattack(monster)
+
     def boss(self, boss):
         print("you have entered the boss room. prepare yourself for the final battle.")
         print("୧༼ಠ益ಠ༽୨")
