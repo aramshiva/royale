@@ -27,13 +27,9 @@ def Boss(name, weapons, desc, hp, damage, catchphrase, attackphrase): return {"t
 
 def Action(t, monster):
     if t == "a": game.battle(monster)
-            
     if t == "b": game.befriend(monster)
-            
     if t == "w": game.wear()
-            
     if t == "e": game.eat()
-    
     if t == "s": game.shop(data["player"])
 
 data = {
@@ -60,7 +56,12 @@ data = {
     ],
     "shopkeeper": [
         Sale("a fedora", "pretty!", 10),
-        Sale("a fedora (but with a feather on top", "may no one know why the shopkeeper charges so much", 50)
+        Sale("a fedora (but with a feather on top", "may no one know why the shopkeeper charges so much", 50),
+        Sale("a red fedora", "a fedora... but red", 500),
+        Sale("Magic Wand", "A wand that emits a faint glow", 100, 5, "weapon", 10),
+        Sale("Potion of Strength", "Increases your damage for a limited time", 75, objecttype="consumable", uses=3),
+        Sale("Healing Potion", "Restores health when consumed", 50, 1),
+        Sale("Mystery Box", "Who knows what it contains?", 300)
     ],
     "monsters": [
         Monster("the gate guards", [], "only obeys the king", 5, 2, "you may not go through", "FOR THE KING!"),
@@ -76,6 +77,7 @@ data = {
         ["a", "attack"],
         ["w", "wear"],
         ["e", "eat"],
+        ["b", "befriend"],
         ["s", "shop"]
         ]
 }
@@ -108,7 +110,7 @@ loading...
     
     def enter(self, room):
         self.current_room = room
-        entermessages = ["you have entered {}", "you stumble upon {}", "you find yourself in {}", "you appear to be in {}", "you have appeared in {}", "you are in {}", "you are now in {}"]
+        entermessages = ["you are now in {}", "you have entered {}", "you stumble upon {}", "you find yourself in {}", "you appear to be in {}", "you have appeared in {}", "you are in {}", "you are now in {}"]
         entermessage = random.choice(entermessages)
         print(entermessage.format(room["name"]))
 
@@ -224,86 +226,81 @@ loading...
         
     
     def shop(self, player):
-        canceled = False
-        def inventorysell(player):
-            while True:
-                for i, item in enumerate(player["inventory"]):
-                    i += 1
-                    print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
-                choice = input("enter item number (or c to cancel)")
-                if choice != "c":
-                    try: 
-                        choice = self.player["inventory"][int(choice) - 1]
-                        break
-                    except: 
-                        print("invalid choice! try again")
-                else:
-                    canceled = True
-                return choice
-        
-        print("you currently have {} tokens.".format(self.player["tokens"]))
-        if input("would you like to sell an item in your inventory?") == "y":
-            if not player["inventory"]: print("you have nothing to sell!")
+        print("\n" * 300)
+        print("the shop\n")
+        print("the shopkeeper welcomes you to his humble abode. everything is for sale, except his dog")
+        if input("would you like to sell anything? you can only sell one item due to the shopkeeper needing to get more money from the bank (y/n)") == "y":
+            if not data["player"]["inventory"]:
+                print("you have nothing to sell!")
             else:
-                sold = inventorysell(player)
-                if not canceled:
-                  self.player["tokens"] += sold["value"]
-                  print("sold {} for {} tokens".format(sold["name"], sold["value"]))
-                  player["inventory"].remove(sold)
-        cart = []
-        while True:
-            while True:
-                print("========")
-                print("THE SHOP")
-                print("========")
-                print("the shopkeeper welcomes you. he says that everything is for sale (except his dog)")
-                print("you currently have {} tokens".format(self.player["tokens"]))
-                for i, item in enumerate(data["shopkeeper"]):
-                    if item not in cart:
-                        i += 1
-                        print("({}) {} - {} tokens".format(i, item["name"], item["value"]))
-                c = input("input a number (or c to cancel)")
-                if c != "c":
-                    try: 
-                        c = data["shopkeeper"][int(c) - 1]
-                        break
+                for item in data["player"]["inventory"]:
+                    print("{} - {} tokens".format(item["name"], item["value"]))
+                choice = input("choose an option (l to leave)")
+                if choice != "l" or choice != "l".upper():
+                    for item in items:
+                        if item["name"] == choice or item["name"] == choice.lower() or item["name"] == choice.capitalize():
+                            choice = item
+                            break
                     
-                    except: print("invalid choice! you must input a number")
-                else: 
-                    if self.player["tokens"] >= c["value"]:
-                        self.player["tokens"] -= c["value"]
-                        self.player["inventory"].append(c)
-                        data["shopkeeper"].remove(c)
-                        print("\n" * 30)
-                        print("bought {} for {} tokens".format(c["name"], c["value"]))
-                        print("you now have {} tokens".format(self.player["tokens"]))
-                        player = self.player
-                    else: return
+                    if isinstance(choice, str):
+                        print("you returned an invalid option!")   
+                    
+                    else:
+                        data["player"]["tokens"] += item["value"]
+                        data["player"]["inventory"].remove(item)
+                        print("sold {} for {} tokens".format(item["name"], item["value"]))
+                
+        while True:
+            items = data["shopkeeper"]
+            print("you have {} tokens".format(data["player"]["tokens"]))
+            for item in items:
+                print("{} - {} tokens".format(item["name"], item["value"]))
+            choice = input("choose an option (l to leave)")
+            if choice != "l":
+                for item in items:
+                    if item["name"] == choice or item["name"] == choice.lower() or item["name"] == choice.capitalize():
+                        choice = item
+                        break
+                        
+                if isinstance(choice, str):
+                    print("you returned an invalid option!")
+                        
+                elif item["value"] > data["player"]["tokens"]:
+                    print("you cant afford this!")
+                else:
+                    data["player"]["tokens"] -= item["value"]
+                    print("bought {}".format(item["name"]))
+                    data["player"]["inventory"].append(item)
+                    data["shopkeeper"].remove(item)
+            else:
+                print("the shopkeeper thanks you for visiting him")
+                return
 
     def eat(self):
         foods = [item for item in data["player"]["inventory"] if item["type"] == "consumable"]
-        
+    
         if foods:
             while True:
                 print("choose an item to eat:")
                 for i, food in enumerate(foods):
                     print("({}) {} - {} health".format(i + 1, food["name"], food["hv"]))
-        
                 choice = input()
                 
-                try: 
-                    choice = food[int(choice) + 1]
-                    break
-                except: print("invalid Option, try again.")
+                try:
+                    choice = food[int(choice) - 1]
+                except:
+                    print("invalid option, try again.")
+                
             
-            if data["player"]["maxhealth"] == data["player"]["health"]:
-                if data["player"]["health"] + choice["hv"] <= data["player"]["maxhealth"]: data["player"]["health"] += choice["hv"]
-                else: data["player"]["health"] = data["player"]["maxhealth"]
-                print("ate {} for {} health. you are now at {} health.".format(choice["name"], choice["hv"], data["player"]["health"]))
-                data["player"]["inventory"].remove(choice)
-                    
-            else:
-                print("you are at max health!")
+                if data["player"]["maxhealth"] == data["player"]["health"]:
+                    print("you are at max health!")
+                    return
+                
+                else:
+                    if data["player"]["health"] + choice["hv"] <= data["player"]["maxhealth"]: data["player"]["health"] += choice["hv"]
+                    else: data["player"]["health"] = data["player"]["maxhealth"]
+                    print("ate {} for {} health. you are now at {} health.".format(choice["name"], choice["hv"], data["player"]["health"]))
+                    data["player"]["inventory"].remove(choice)
         
         else:
             print("you don't have any food!")
